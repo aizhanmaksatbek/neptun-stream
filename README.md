@@ -9,3 +9,12 @@ The system is written using the FastAPI, database, Python.
 
 # Database:
 Store the articles
+
+
+Create your virtual environment:
+bash
+```
+python -m venv .venv_neptun
+source .venv_neptun/bin/activate
+deactivate
+```
