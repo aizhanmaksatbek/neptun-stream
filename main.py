@@ -1,12 +1,17 @@
+import uuid
+
 from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlmodel import SQLModel, Field, create_engine, Session, select
 from typing import Annotated
 
 
-class Article(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+class ArticleBase(SQLModel):
     title: str = Field(index=True)
     content: str = Field(index=True)
+
+
+class Article(ArticleBase, table=True):
+    id: str | None = Field(default=None, primary_key=True)
 
 
 sqlite_file_name = "database_neptun.db"
@@ -75,9 +80,9 @@ def get_article(
 
 @app.post("/articles/")
 def publish_article(
-    article: Article,
+    article: ArticleBase,
     session: SessionDep
-) -> Article:
+) -> dict:
     """This function saves the article in database using unique id.
     Parameters:
         title (str): title of the article
@@ -86,7 +91,11 @@ def publish_article(
         int: unique id of the article from the stored database
     """
 
-    session.add(article)
+    id = str(uuid.uuid4())
+    print(id)
+
+    _article: Article = Article(id=id, title=article.title, content=article.content)
+    session.add(_article)
     session.commit()
-    session.refresh(article)
-    return article
+    session.refresh(_article)
+    return {"message": f"Article with id {_article.id} published successfully"}
