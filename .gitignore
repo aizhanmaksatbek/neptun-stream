@@ -1,2 +1,3 @@
 .venv_neptun
 __pycache__
+*.db
