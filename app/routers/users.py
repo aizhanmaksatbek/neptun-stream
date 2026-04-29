@@ -4,6 +4,11 @@ from ..db.base import User
 from sqlmodel import select
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
+from fastapi import HTTPException
+
+
+def encrypt_password(password: str) -> str:
+    return f"encrypted-{password}"
 
 
 router = APIRouter()
@@ -21,9 +26,12 @@ def add_user(
     user: User,
     session: SessionDep
 ):
+    user.password = encrypt_password(user.password)
     session.add(user)
     session.commit()
     session.refresh(user)
+
+
 
 
 @router.post("/users/authenticate/")
@@ -34,6 +42,8 @@ async def authenticate_user(
 ):
     db_user = session.get(User, user.username)
     if not db_user:
-        return {"error": "Invalid username or password"}
+        raise HTTPException(status_code=400, detail="Invalid username")
+    if db_user.password != encrypt_password(user.password):
+        raise HTTPException(status_code=400, detail="Invalid password")
 
-    return {"token": f"fake-token-for-user-{token}"}
+    return {"access_token": f"fake-token-for-user-{user.username}", "token_type": "bearer"}
