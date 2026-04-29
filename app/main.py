@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from alembic.scripts import create_db_and_tables
-from .routers import articles
+from .routers import articles, users
 from .config.settings import sqlite_url, connect_args
 from sqlmodel import create_engine
 
 
 app = FastAPI()
 app.include_router(articles.router)
+app.include_router(users.router)
 
 
 @app.on_event("startup")

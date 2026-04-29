@@ -8,3 +8,8 @@ class ArticleBase(SQLModel):
 
 class Article(ArticleBase, table=True):
     id: str | None = Field(default=None, primary_key=True)
+
+
+class User(SQLModel, table=True):
+    username: str = Field(index=True, unique=True, primary_key=True)
+    password: str = Field(index=False)
