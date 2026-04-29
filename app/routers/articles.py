@@ -1,45 +1,14 @@
 import uuid
-
-from fastapi import FastAPI, Depends, HTTPException, Query
-from sqlmodel import SQLModel, Field, create_engine, Session, select
+from ..dependencies import SessionDep
+from sqlmodel import select
+from fastapi import HTTPException, Query, APIRouter
 from typing import Annotated
+from ..db.base import Article, ArticleBase
+
+router = APIRouter()
 
 
-class ArticleBase(SQLModel):
-    title: str = Field(index=True)
-    content: str = Field(index=True)
-
-
-class Article(ArticleBase, table=True):
-    id: str | None = Field(default=None, primary_key=True)
-
-
-sqlite_file_name = "database_neptun.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
-
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-
-def get_session():
-    with Session(engine) as session:
-        yield session
-
-
-SessionDep = Annotated[Session, Depends(get_session)]
-app = FastAPI()
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
-
-
-@app.get("/articles/")
+@router.get("/articles/")
 def get_home_page(
     session: SessionDep,
     offset: int = 0,
@@ -54,7 +23,7 @@ def get_home_page(
     return articles
 
 
-@app.get("/articles/{article_id}")
+@router.get("/articles/{article_id}")
 def get_article(
     article_id: int,
     session: SessionDep
@@ -78,7 +47,7 @@ def get_article(
     return article
 
 
-@app.post("/articles/")
+@router.post("/articles/")
 def publish_article(
     article: ArticleBase,
     session: SessionDep
