@@ -1,8 +1,10 @@
-from fastapi import FastAPI
-from alembic.scripts import create_db_and_tables
 from .routers import articles, users
 from .config.settings import sqlite_url, connect_args
+from .alembic.scripts import create_db_and_tables
 from sqlmodel import create_engine
+from fastapi import FastAPI
+
+import uvicorn
 
 
 app = FastAPI()
@@ -16,3 +18,5 @@ def on_startup():
     create_db_and_tables(engine)
 
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

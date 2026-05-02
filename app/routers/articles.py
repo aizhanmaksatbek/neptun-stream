@@ -1,16 +1,16 @@
 import uuid
-from ..dependencies import SessionDep
-from sqlmodel import select
-from fastapi import HTTPException, Query, APIRouter
+from sqlmodel import select, Session
+from fastapi import HTTPException, Query, APIRouter, Depends
 from typing import Annotated
 from ..db.base import Article, ArticleBase
+from ..db.session import get_session
 
 router = APIRouter()
 
 
 @router.get("/articles/")
 def get_home_page(
-    session: SessionDep,
+    session: Annotated[Session, Depends(get_session)],
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100
 ) -> list[Article]:
@@ -26,7 +26,7 @@ def get_home_page(
 @router.get("/articles/{article_id}")
 def get_article(
     article_id: int,
-    session: SessionDep
+    session: Annotated[Session, Depends(get_session)]
 ) -> Article:
     """
     This function retrieves the article title and content by its id.
@@ -50,7 +50,7 @@ def get_article(
 @router.post("/articles/")
 def publish_article(
     article: ArticleBase,
-    session: SessionDep
+    session: Annotated[Session, Depends(get_session)]
 ) -> dict:
     """This function saves the article in database using unique id.
     Parameters:
