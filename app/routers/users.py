@@ -69,6 +69,18 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
 def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
 
+def authenticate_user(
+        session: Session,
+        username: str,
+        password: str
+) -> User:
+    login_exception = HTTPException(status_code=400, detail="Incorrect username or password")
+    user = session.get(User, username)
+    if not user:
+        raise login_exception
+    if not verify_password(password, user.password):
+        raise login_exception
+    return user
 
 @router.post("/token")
 async def login(
@@ -76,10 +88,5 @@ async def login(
     session: Annotated[Session, Depends(get_session)]
 ):
     """This function logins user and returns a user token."""
-    login_exception = HTTPException(status_code=400, detail="Incorrect username or password")
-    user = session.get(User, form_data.username)
-    if not user:
-        raise login_exception
-    if not verify_password(form_data.password, user.password):
-        raise login_exception
+    user = authenticate_user(session, form_data.username, form_data.password)
     return {"access_token": user.username, "token_type": "bearer"}
