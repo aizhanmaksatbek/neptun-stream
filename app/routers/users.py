@@ -48,6 +48,17 @@ def add_user(
     session.commit()
     session.refresh(user)
 
+@router.delete("/users/{username}")
+def delete_user(
+    username: str,
+    session: Annotated[Session, Depends(get_session)]
+):
+    user = session.get(User, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    session.delete(user)
+    session.commit()
+
 def decode_fake_token(token: str) -> User:
     return User(username= token + "1", password="encrypted-1")
 
