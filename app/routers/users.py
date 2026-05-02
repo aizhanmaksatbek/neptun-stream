@@ -1,17 +1,28 @@
 from typing import Annotated
+import logging
 
+from pwdlib.exceptions import UnknownHashError
 from sqlmodel import Session, select
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pwdlib import PasswordHash
 
 from ..db.base import User
 from ..db.session import get_session
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
+password_hash = PasswordHash.recommended()
+
 def encrypt_password(password: str) -> str:
-    return f"encrypted-{password}"
+    return password_hash.hash(password)
+
+def verify_password(plain_password: str, encrypted_password: str) -> bool:
+    try:
+        return password_hash.verify(plain_password, encrypted_password)
+    except UnknownHashError:
+        logging.error("Unknown hash error occurred while verifying password.")
+        raise HTTPException(status_code=400, detail="Invalid password.")
 
 
 router = APIRouter()
@@ -58,6 +69,6 @@ async def login(
     user = session.get(User, form_data.username)
     if not user:
         raise login_exception
-    if user.password != encrypt_password(form_data.password):
+    if not verify_password(form_data.password, user.password):
         raise login_exception
     return {"access_token": user.username, "token_type": "bearer"}
