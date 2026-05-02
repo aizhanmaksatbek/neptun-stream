@@ -2,3 +2,5 @@ fastapi[standard]
 sqlmodel
 python-multipart
 uvicorn
+pyjwt
+pwdlib[argon2]
