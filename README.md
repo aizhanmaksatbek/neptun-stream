@@ -34,3 +34,5 @@ fastapi dev app/main.py
 or
 fastapi dev
 ```
+
+The project github link: https://github.com/aizhanmaksatbek/neptun-stream
