@@ -12,4 +12,9 @@ class Article(ArticleBase, table=True):
 
 class User(SQLModel, table=True):
     username: str = Field(index=True, unique=True, primary_key=True)
-    password: str = Field(index=False)
+    password: str = Field(index=False) # hash of the plain password
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
