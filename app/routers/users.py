@@ -73,13 +73,12 @@ def authenticate_user(
         session: Session,
         username: str,
         password: str
-) -> User:
-    login_exception = HTTPException(status_code=400, detail="Incorrect username or password")
+) -> User | bool:
     user = session.get(User, username)
     if not user:
-        raise login_exception
+        return False
     if not verify_password(password, user.password):
-        raise login_exception
+        return False
     return user
 
 @router.post("/token")
@@ -89,4 +88,6 @@ async def login(
 ):
     """This function logins user and returns a user token."""
     user = authenticate_user(session, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
     return {"access_token": user.username, "token_type": "bearer"}
