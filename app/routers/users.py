@@ -61,14 +61,35 @@ def delete_user(
     session.delete(user)
     session.commit()
 
-def decode_fake_token(token: str) -> User:
-    return User(username= token + "1", password="encrypted-1")
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
-    return decode_fake_token(token)
+def get_user_by_username(
+    session: Session,
+    username: str
+) -> User | None:
+    return session.exec(select(User).where(User.username == username)).first()
+
+
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    session: Annotated[Session, Depends(get_session)]
+) -> User:
+    decrypted_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    username = decrypted_token.get("sub")
+    try:
+        if username is None:
+            raise HTTPException(status_code=401, detail="Could not validate credentials")
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    user = get_user_by_username(session, username=username)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    return user
+
 
 @router.get("/users/me")
-def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
+def read_users_me(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
     return current_user
 
 def authenticate(
