@@ -1,7 +1,6 @@
 from typing import Annotated
 import logging
-from datetime import timedelta
-import datetime
+from datetime import datetime, timedelta, timezone
 from pwdlib.exceptions import UnknownHashError
 from sqlmodel import Session, select
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -97,9 +96,9 @@ def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """
     data_copy = data.copy()
     if expires_delta:
-        expire_date = datetime.utcnow() + expires_delta
+        expire_date = datetime.now(timezone.utc) + expires_delta
     else:
-        expire_date = datetime.utcnow() + timedelta(minutes=15)
+        expire_date = datetime.now(timezone.utc) + timedelta(minutes=15)
     data_copy.update({"exp": expire_date})
     encoded_jwt = jwt.encode(data_copy, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
