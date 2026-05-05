@@ -85,7 +85,7 @@ def get_current_user(
 ) -> User:
     logging.info(f"{security_scopes.scopes}")
     if security_scopes.scopes:
-        authenticate_value = f"Bearer scope = {security_scopes.scopes}"
+        authenticate_value = f"Bearer scope = {security_scopes.scope_str}"
     else:
         authenticate_value = "Bearer"
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
