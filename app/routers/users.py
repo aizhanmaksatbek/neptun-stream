@@ -83,6 +83,7 @@ def get_current_user(
     session: Annotated[Session, Depends(get_session)],
 
 ) -> User:
+    logging.info(f"{security_scopes.scopes}")
     if security_scopes.scopes:
         authenticate_value = f"Bearer scope = {security_scopes.scopes}"
     else:
@@ -115,12 +116,22 @@ def get_current_user(
                 )
     return user
 
+def get_current_active_user(
+        current_user: Annotated[User, Security(get_current_user, scopes=["me"])]
+):
+    return current_user
 
 @router.get("/users/me")
 def read_users_me(
-    current_user: Annotated[User, Security(get_current_user, scopes=["me"])]
+    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     return current_user
+
+@router.get("/users/me/items")
+def read_own_items(
+    current_user: Annotated[User, Security(get_current_active_user, scopes=["items"])]
+) -> dict:
+    return {"item_id": "Foo", "owner": f"{current_user.username}"}
 
 def authenticate(
         session: Session,
