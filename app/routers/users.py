@@ -3,12 +3,17 @@ import logging
 from datetime import datetime, timedelta, timezone
 from pwdlib.exceptions import UnknownHashError
 from sqlmodel import Session, select
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import ValidationError
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
+from fastapi.security import (
+    OAuth2PasswordBearer,
+    OAuth2PasswordRequestForm,
+    SecurityScopes
+    )
 from pwdlib import PasswordHash
 import jwt
 from jwt.exceptions import InvalidTokenError
-from ..db.base import User, Token
+from ..db.base import User, Token, TokenData
 from ..config.settings import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from ..db.session import get_session
 
@@ -73,25 +78,47 @@ def get_user_by_username(
 
 
 def get_current_user(
+    security_scopes: SecurityScopes,
     token: Annotated[str, Depends(oauth2_scheme)],
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[Session, Depends(get_session)],
+
 ) -> User:
-    decrypted_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    username = decrypted_token.get("sub")
+    if security_scopes.scopes:
+        authenticate_value = f"Bearer scope = {security_scopes.scopes}"
+    else:
+        authenticate_value = "Bearer"
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    username = payload.get("sub")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": authenticate_value},
+    )
     try:
         if username is None:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
-    except InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+            raise credentials_exception
+        scopes = payload.get("scope", "")
+        token_scopes = scopes.split(" ")
+        token_data = TokenData(username=username, scopes=token_scopes)
+    except (InvalidTokenError, ValidationError):
+        raise credentials_exception
     user = get_user_by_username(session, username=username)
     if user is None:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        raise credentials_exception
+    
+    for scope in security_scopes.scopes:
+        if scope not in token_data.scopes:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough credentials",
+                headers={"WWW-Authenticate": authenticate_value}
+                )
     return user
 
 
 @router.get("/users/me")
 def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Security(get_current_user, scopes=["me"])]
 ):
     return current_user
 
@@ -139,8 +166,7 @@ async def login(
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_token(
-        data={"sub": user.username},
-        scope=" ".join(form_data.scopes),
+        data={"sub": user.username, "scope":" ".join(form_data.scopes)},
         expires_delta=expires_delta
     )
     return Token(access_token=token, token_type="bearer")
