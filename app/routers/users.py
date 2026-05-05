@@ -28,7 +28,10 @@ def verify_password(plain_password: str, encrypted_password: str) -> bool:
 
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="token",
+    scopes={"me": "Read information about the current user.", "items": "Read items."}
+    )
 
 @router.get("/users/")
 def get_users(
@@ -129,7 +132,7 @@ def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Annotated[Session, Depends(get_session)]
-):
+) -> Token:
     """This function logins user and returns a user token."""
     user = authenticate(session, form_data.username, form_data.password)
     if not user:
@@ -137,6 +140,7 @@ async def login(
     expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_token(
         data={"sub": user.username},
+        scope=" ".join(form_data.scopes),
         expires_delta=expires_delta
     )
     return Token(access_token=token, token_type="bearer")
