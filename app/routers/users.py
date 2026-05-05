@@ -145,6 +145,12 @@ def authenticate(
         return False
     return user
 
+@router.get("/status")
+def get_status(
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    return {"status": "ok"}
+
 
 def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """This function encodes the user information in a JWT token.
