@@ -1,0 +1,5 @@
+name: Neptun-Stream CI
+
+on:
+    push:
+        branches: [main]
