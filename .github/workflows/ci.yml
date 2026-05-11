@@ -21,4 +21,12 @@ jobs:
             # Run tests
             - run: |
                 pytest
-            
+            # Checks code style - Linting
+            - run: |
+                flake8 .
+            #  Formatting check
+            - run: |
+                black --check .
+            # Type checking
+            - run: |
+                mypy .
