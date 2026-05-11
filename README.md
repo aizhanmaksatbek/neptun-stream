@@ -36,3 +36,9 @@ fastapi dev
 ```
 
 The project github link: https://github.com/aizhanmaksatbek/neptun-stream
+
+
+# CI/CD
+CI - installs requirements, runs the tests, lints, format and type checks before pushing to the main repository.
+
+CD - Deploys to production server (later be decided).
