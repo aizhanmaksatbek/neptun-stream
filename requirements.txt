@@ -4,3 +4,5 @@ python-multipart
 uvicorn
 pyjwt
 pwdlib[argon2]
+pytest
+httpx
