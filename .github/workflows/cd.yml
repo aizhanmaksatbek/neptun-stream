@@ -17,6 +17,7 @@ jobs:
                 key: ${{ secrets.SSH_PRIVATE_KEY }}
                 script: |
                     # Update package index and install dependencies
+                    sudo rm -rf /usr/local/lib/docker/cli-plugins/*
                     sudo dnf update -y
                     sudo dnf install git -y
                     sudo dnf install docker -y
