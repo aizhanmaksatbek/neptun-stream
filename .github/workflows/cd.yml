@@ -39,7 +39,9 @@ jobs:
 
                     # Navigate to the project directory and deploy
                     cd /home/ec2-user/
-                    git clone https://github.com/aizhanmaksatbek/neptun-stream.git
+                    if [! -d "neptun-stream"]; then
+                        git clone https://github.com/aizhanmaksatbek/neptun-stream.git
+                    fi
                     cd neptun-stream
                     git fetch origin main
                     git reset --hard origin/main
