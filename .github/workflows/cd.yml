@@ -23,9 +23,6 @@ jobs:
                     # Install Docker
                     sudo dnf install docker
 
-                    # Add the SSH user to the Docker group
-                    sudo usermod -aG docker ${{ secrets.SSH_USERNAME }}
-
                     # Install Docker Compose
                     sudo dnf install -y docker-compose-plugin
                     docker compose up -d
