@@ -24,7 +24,7 @@ jobs:
                     # Verify installations
                     docker --version
 
-                    sudo usermod -aG docker ${{secrets.SSH_USERNAME}}
+                    sudo usermod -aG docker ${{ secrets.SSH_USERNAME }}
 
                     # Install Docker Compose
                     sudo systemctl start docker
@@ -39,7 +39,7 @@ jobs:
 
                     # Navigate to the project directory and deploy
                     cd /home/ec2-user/
-                    if [! -d "neptun-stream"]; then
+                    if [ ! -d "neptun-stream" ]; then
                         git clone https://github.com/aizhanmaksatbek/neptun-stream.git
                     fi
                     cd neptun-stream
