@@ -18,7 +18,8 @@ jobs:
                 script: |
                     # Update package index and install dependencies
                     sudo dnf update -y
-                    sudo dnf install docker git
+                    sudo dnf install git
+                    sudo dnf install docker -y
 
                     # Verify installations
                     docker --version
