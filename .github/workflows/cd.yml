@@ -33,10 +33,8 @@ jobs:
                     -o /usr/local/lib/docker/cli-plugins/docker-compose
                     sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
-                    docker compose version
-
                     # Verify installations
-                    docker compose --version
+                    docker compose version
 
                     # Navigate to the project directory and deploy
                     cd /home/ubuntu/
@@ -44,4 +42,4 @@ jobs:
                     cd neptun-stream
                     git fetch origin main
                     git reset --hard origin/main
-                    docker-compose up -d --build
+                    docker compose up -d --build
