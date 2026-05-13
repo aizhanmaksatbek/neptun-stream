@@ -1,4 +1,4 @@
-name: Neptun-Stream CI
+name: CI - Neptun-Stream
 
 on:
     push:

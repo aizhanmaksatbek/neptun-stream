@@ -1,4 +1,4 @@
-name: CD pipeline for neptun-stream
+name: CD - Neptun-Stream
 on:
     push:
         branches: [main]
@@ -46,5 +46,3 @@ jobs:
                     git fetch origin main
                     git reset --hard origin/main
                     docker-compose up -d --build
-                    
-
