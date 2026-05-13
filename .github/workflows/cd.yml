@@ -20,7 +20,6 @@ jobs:
                     sudo dnf update -y
                     sudo dnf install git -y
                     sudo dnf install docker -y
-                    sudo dnf install curl -y
 
                     # Verify installations
                     docker --version
