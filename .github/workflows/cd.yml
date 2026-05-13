@@ -37,7 +37,7 @@ jobs:
                     docker compose version
 
                     # Navigate to the project directory and deploy
-                    cd /home/ubuntu/
+                    cd /home/ec2-user/
                     git clone git@github.com:aizhanmaksatbek/neptun-stream.git
                     cd neptun-stream
                     git fetch origin main
