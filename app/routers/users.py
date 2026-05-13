@@ -14,15 +14,21 @@ from pwdlib import PasswordHash
 import jwt
 from jwt.exceptions import InvalidTokenError
 from ..db.base import User, Token, TokenData
-from ..config.settings import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from ..config.settings import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+    )
 from ..db.session import get_session
 
 logging.basicConfig(level=logging.INFO)
 
 password_hash = PasswordHash.recommended()
 
+
 def encrypt_password(password: str) -> str:
     return password_hash.hash(password)
+
 
 def verify_password(plain_password: str, encrypted_password: str) -> bool:
     try:
@@ -35,8 +41,12 @@ def verify_password(plain_password: str, encrypted_password: str) -> bool:
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
-    scopes={"me": "Read information about the current user.", "items": "Read items."}
+    scopes={
+        "me": "Read information about the current user.",
+        "items": "Read items."
+        }
     )
+
 
 @router.get("/users/")
 def get_users(
@@ -44,19 +54,25 @@ def get_users(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100
 ):
-    """This endpoint gets the users from the Users table in offset and limit range."""
+    """This endpoint gets the users from the Users table
+    in offset and limit range.
+    """
     return session.exec(select(User).offset(offset).limit(limit)).all()
+
 
 @router.post("/users/")
 def add_user(
     user: User,
     session: Annotated[Session, Depends(get_session)]
 ):
-    """This function allows to add a new user to database. It encrypts the password before saving it."""
+    """This function allows to add a new user to database.
+    It encrypts the password before saving it.
+    """
     user.password = encrypt_password(user.password)
     session.add(user)
     session.commit()
     session.refresh(user)
+
 
 @router.delete("/users/{username}")
 def delete_user(
@@ -106,7 +122,6 @@ def get_current_user(
     user = get_user_by_username(session, username=username)
     if user is None:
         raise credentials_exception
-    
     for scope in security_scopes.scopes:
         if scope not in token_data.scopes:
             raise HTTPException(
@@ -116,10 +131,14 @@ def get_current_user(
                 )
     return user
 
+
 def get_current_active_user(
-        current_user: Annotated[User, Security(get_current_user, scopes=["me"])]
+        current_user: Annotated[
+            User, Security(get_current_user, scopes=["me"])
+            ]
 ):
     return current_user
+
 
 @router.get("/users/me")
 def read_users_me(
@@ -127,11 +146,15 @@ def read_users_me(
 ):
     return current_user
 
+
 @router.get("/users/me/items")
 def read_own_items(
-    current_user: Annotated[User, Security(get_current_active_user, scopes=["items"])]
+    current_user: Annotated[
+        User, Security(get_current_active_user, scopes=["items"])
+        ]
 ) -> dict:
     return {"item_id": "Foo", "owner": f"{current_user.username}"}
+
 
 def authenticate(
         session: Session,
@@ -145,6 +168,7 @@ def authenticate(
         return False
     return user
 
+
 @router.get("/status")
 def get_status(
     current_user: Annotated[User, Depends(get_current_user)]
@@ -155,7 +179,8 @@ def get_status(
 def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """This function encodes the user information in a JWT token.
     Parameters:
-    data (dict): A dictionary containing the user information to be encoded in the token.
+    data (dict): A dictionary containing the user information
+    to be encoded in the token.
     - data: dictionary with username key, value
     - expires_delta: expiration timedelta in minutes
 
@@ -180,10 +205,13 @@ async def login(
     """This function logins user and returns a user token."""
     user = authenticate(session, form_data.username, form_data.password)
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect username or password"
+            )
     expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_token(
-        data={"sub": user.username, "scope":" ".join(form_data.scopes)},
+        data={"sub": user.username, "scope": " ".join(form_data.scopes)},
         expires_delta=expires_delta
     )
     return Token(access_token=token, token_type="bearer")

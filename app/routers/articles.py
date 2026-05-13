@@ -63,7 +63,11 @@ def publish_article(
     id = str(uuid.uuid4())
     print(id)
 
-    _article: Article = Article(id=id, title=article.title, content=article.content)
+    _article: Article = Article(
+        id=id,
+        title=article.title,
+        content=article.content
+        )
     session.add(_article)
     session.commit()
     session.refresh(_article)
