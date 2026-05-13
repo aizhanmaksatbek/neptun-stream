@@ -8,7 +8,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             # Download repository code
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v3
             # Deploy via SSH
             - uses: appleboy/ssh-action@master
               with:
