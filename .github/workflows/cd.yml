@@ -18,7 +18,7 @@ jobs:
                 script: |
                     # Update package index and install dependencies
                     sudo dnf update -y
-                    sudo dnf install docker git curl
+                    sudo dnf install docker
 
                     # Install Docker
                     sudo dnf install docker
@@ -28,10 +28,11 @@ jobs:
 
                     # Install Docker Compose
                     sudo dnf install -y docker-compose-plugin
+                    docker compose up -d
 
                     # Verify installations
                     docker --version
-                    docker-compose --version
+                    docker compose --version
 
                     # Navigate to the project directory and deploy
                     cd /home/ubuntu/
