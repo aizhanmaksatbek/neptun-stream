@@ -36,6 +36,8 @@ jobs:
                     # Verify installations
                     docker compose version
 
+                    sudo usermod -aG docker ${{secrets.SSH_USERNAME}}
+
                     # Navigate to the project directory and deploy
                     cd /home/ec2-user/
                     git clone https://github.com/aizhanmaksatbek/neptun-stream.git
