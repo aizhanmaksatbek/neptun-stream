@@ -17,33 +17,27 @@ jobs:
                 key: ${{ secrets.SSH_PRIVATE_KEY }}
                 script: |
                     # Update package index and install dependencies
-                    sudo rm -rf /usr/local/lib/docker/cli-plugins/*
-                    sudo rm -f /usr/local/bin/docker-compose
-                    sudo rm -rf ~/.docker/cli-plugins
-                    sudo rm -f /usr/local/lib/docker/cli-plugins/docker-buildx
                     sudo dnf update -y
-                    sudo dnf install git -y
-                    sudo dnf install docker -y
+                    sudo dnf install -y git docker
 
                     # Verify installations
                     docker --version
 
+                    # Install Docker Compose
+                    sudo systemctl enable docker
+                    sudo systemctl start docker
+
                     sudo usermod -aG docker ${{secrets.SSH_USERNAME}}
 
                     # Install Docker Compose
-                    sudo systemctl start docker
-                    sudo systemctl enable docker
-
-                    # Install Docker Compose
                     sudo mkdir -p /usr/local/lib/docker/cli-plugins
-
-                    sudo curl -SL https://github.com/docker/buildx/releases/latest/download/buildx-v0.17.0.linux-amd64 \
-                    -o /usr/local/lib/docker/cli-plugins/docker-buildx
+                    
+                    sudo curl -SL https://github.com/docker/buildx/releases/download/v0.17.1/buildx-v0.17.1.linux-amd64 -o /usr/local/lib/docker/cli-plugins/docker-buildx
 
                     sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
 
                     # Verify installations
-                    docker compose version
+                    docker buildx version
 
                     # Navigate to the project directory and deploy
                     cd /home/ec2-user/
@@ -53,4 +47,4 @@ jobs:
                     cd neptun-stream
                     git fetch origin main
                     git reset --hard origin/main
-                    docker compose up --build
+                    docker compose up -d --build
