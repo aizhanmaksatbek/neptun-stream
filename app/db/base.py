@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field
+from pwdlib import PasswordHash
 
 
 class ArticleBase(SQLModel):
@@ -13,6 +14,10 @@ class Article(ArticleBase, table=True):
 class User(SQLModel, table=True):
     username: str = Field(index=True, unique=True, primary_key=True)
     password: str = Field(index=False)  # hash of the plain password
+
+    def encrypt_pasword(self, password: str) -> None:
+        password_hash = PasswordHash.recommended()
+        self.password = password_hash.hash(password)
 
 
 class Token(SQLModel):

@@ -10,7 +10,6 @@ from fastapi.security import (
     OAuth2PasswordRequestForm,
     SecurityScopes
     )
-from pwdlib import PasswordHash
 import jwt
 from jwt.exceptions import InvalidTokenError
 from ..db.base import User, Token, TokenData
@@ -20,18 +19,14 @@ from ..config.settings import (
     ACCESS_TOKEN_EXPIRE_MINUTES
     )
 from ..db.session import get_session
+from pwdlib import PasswordHash
 
 logging.basicConfig(level=logging.INFO)
-
-password_hash = PasswordHash.recommended()
-
-
-def encrypt_password(password: str) -> str:
-    return password_hash.hash(password)
 
 
 def verify_password(plain_password: str, encrypted_password: str) -> bool:
     try:
+        password_hash = PasswordHash.recommended()
         return password_hash.verify(plain_password, encrypted_password)
     except UnknownHashError:
         logging.error("Unknown hash error occurred while verifying password.")
@@ -68,10 +63,11 @@ def add_user(
     """This function allows to add a new user to database.
     It encrypts the password before saving it.
     """
-    user.password = encrypt_password(user.password)
+    user.encrypt_pasword(user.password)
     session.add(user)
     session.commit()
     session.refresh(user)
+    return {"message": "New user added"}
 
 
 @router.delete("/users/{username}")
@@ -167,13 +163,6 @@ def authenticate(
     if not verify_password(password, user.password):
         return False
     return user
-
-
-@router.get("/status")
-def get_status(
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    return {"status": "ok"}
 
 
 def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
