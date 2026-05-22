@@ -11,7 +11,6 @@ async def lifespan(app: FastAPI):
     engine = create_engine(sqlite_url, connect_args=connect_args)
     create_db_and_tables(engine)
     yield
-    engine.clear()
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(articles.router)

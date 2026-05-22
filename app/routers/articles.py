@@ -59,16 +59,16 @@ def publish_article(
     Returns:
         int: unique id of the article from the stored database
     """
+    _article: dict = {
+        "id": str(uuid.uuid4()),
+        "title": article.title,
+        "content": article.content
+        }
 
-    id = str(uuid.uuid4())
-    print(id)
-
-    _article: Article = Article(
-        id=id,
-        title=article.title,
-        content=article.content
-        )
-    session.add(_article)
+    _article_verified: Article = Article(**_article)
+    session.add(_article_verified)
     session.commit()
-    session.refresh(_article)
-    return {"message": f"Article with id {_article.id} published successfully"}
+    session.refresh(_article_verified)
+    return {
+        "message": f"Article with id {_article_verified.id} added successfully"
+        }
