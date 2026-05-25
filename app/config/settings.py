@@ -1,5 +1,8 @@
-sqlite_file_name = "database_neptun.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+from pathlib import Path
+
+
+DB_PATH = str((Path().parent / 'db.sqlite').resolve())
+sqlite_url = f"sqlite:///{DB_PATH}"
 
 connect_args = {"check_same_thread": False}
 
