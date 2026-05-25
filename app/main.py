@@ -1,6 +1,6 @@
 from .routers import articles, users
 from .config.settings import sqlite_url, connect_args
-from .alembic.scripts import create_db_and_tables
+from .db.session import create_db_and_tables
 from sqlmodel import create_engine
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
