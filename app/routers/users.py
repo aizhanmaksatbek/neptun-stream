@@ -12,7 +12,7 @@ from fastapi.security import (
     )
 import jwt
 from jwt.exceptions import InvalidTokenError
-from ..db.base import User, Token, TokenData
+from ..db.models import User, Token, TokenData
 from ..config.settings import (
     SECRET_KEY,
     ALGORITHM,

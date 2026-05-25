@@ -2,7 +2,7 @@ import uuid
 from sqlmodel import select, Session
 from fastapi import HTTPException, Query, APIRouter, Depends
 from typing import Annotated
-from ..db.base import Article, ArticleBase
+from ..db.models import Article, ArticleBase
 from ..db.session import get_session
 
 router = APIRouter()
