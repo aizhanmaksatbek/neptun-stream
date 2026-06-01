@@ -1,9 +1,9 @@
-from ..config.settings import sqlite_url, connect_args
+from ..config.settings import DB_URL
 from sqlmodel import create_engine, Session
 from sqlmodel import SQLModel
 from typing import Any
 
-engine = create_engine(sqlite_url, connect_args=connect_args)
+engine = create_engine(DB_URL)
 
 
 def create_db_and_tables(engine: Any) -> None:

@@ -1,3 +1,15 @@
 Generic single-database configuration.
 alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
+
+
+Postgresql
+brew install postgresql@18
+psql postgres -c "CREATE USER bloguser WITH PASSWORD 'bloguser';"
+createdb blog -O bloguser #create a database under the USER
+\dt #lists tables
+\q #exits from database connection
+
+Psycopg is a Postgresql adapter for Python.
+uv pip install "psycopg[binary]"
+

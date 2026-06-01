@@ -1,10 +1,4 @@
-from pathlib import Path
-
-
-DB_PATH = str((Path().parent / 'db.sqlite').resolve())
-sqlite_url = f"sqlite:///{DB_PATH}"
-
-connect_args = {"check_same_thread": False}
+DB_URL = "postgresql+psycopg://bloguser:bloguser@localhost/blog"
 
 # Token
 # openssl rand -hex 32
