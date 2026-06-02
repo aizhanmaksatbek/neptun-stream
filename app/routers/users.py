@@ -2,7 +2,8 @@ from typing import Annotated
 import logging
 from datetime import datetime, timedelta, timezone
 from pwdlib.exceptions import UnknownHashError
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
 from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 from fastapi.security import (
@@ -44,56 +45,60 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 
 @router.get("/users/")
-def get_users(
-    session: Annotated[Session, Depends(get_session)],
+async def get_users(
+    session: Annotated[AsyncSession, Depends(get_session)],
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100
 ):
     """This endpoint gets the users from the Users table
     in offset and limit range.
     """
-    return session.exec(select(User).offset(offset).limit(limit)).all()
+    return (
+        await session.execute(select(User).offset(offset).limit(limit))
+        ).scalars().all()
 
 
 @router.post("/users/")
-def add_user(
+async def add_user(
     user: User,
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """This function allows to add a new user to database.
     It encrypts the password before saving it.
     """
     user.encrypt_pasword(user.password)
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return {"message": "New user added"}
 
 
 @router.delete("/users/{username}")
-def delete_user(
+async def delete_user(
     username: str,
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
-    user = session.get(User, username)
+    user = await session.get(User, username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    session.delete(user)
-    session.commit()
+    await session.delete(user)
+    await session.commit()
+    return {"message": "User deleted"}
 
 
-def get_user_by_username(
-    session: Session,
+async def get_user_by_username(
+    session: AsyncSession,
     username: str
 ) -> User | None:
-    return session.exec(select(User).where(User.username == username)).first()
+    return (
+        await session.execute(select(User).where(User.username == username))
+        ).scalars().first()
 
 
-def get_current_user(
+async def get_current_user(
     security_scopes: SecurityScopes,
     token: Annotated[str, Depends(oauth2_scheme)],
-    session: Annotated[Session, Depends(get_session)],
-
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> User:
     logging.info(f"{security_scopes.scopes}")
     if security_scopes.scopes:
@@ -115,7 +120,7 @@ def get_current_user(
         token_data = TokenData(username=username, scopes=token_scopes)
     except (InvalidTokenError, ValidationError):
         raise credentials_exception
-    user = get_user_by_username(session, username=username)
+    user = await get_user_by_username(session, username=username)
     if user is None:
         raise credentials_exception
     for scope in security_scopes.scopes:
@@ -128,7 +133,7 @@ def get_current_user(
     return user
 
 
-def get_current_active_user(
+async def get_current_active_user(
         current_user: Annotated[
             User, Security(get_current_user, scopes=["me"])
             ]
@@ -152,12 +157,12 @@ def read_own_items(
     return {"item_id": "Foo", "owner": f"{current_user.username}"}
 
 
-def authenticate(
-        session: Session,
+async def authenticate(
+        session: AsyncSession,
         username: str,
         password: str
 ) -> User | bool:
-    user = session.get(User, username)
+    user = await session.get(User, username)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -189,10 +194,10 @@ def create_token(data: dict, expires_delta: timedelta | None = None) -> str:
 @router.post("/token")
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[AsyncSession, Depends(get_session)]
 ) -> Token:
     """This function logins user and returns a user token."""
-    user = authenticate(session, form_data.username, form_data.password)
+    user = await authenticate(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=400,
