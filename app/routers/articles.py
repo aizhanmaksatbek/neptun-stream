@@ -1,5 +1,6 @@
 import uuid
-from sqlmodel import select, Session
+from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, Query, APIRouter, Depends
 from typing import Annotated
 from ..db.models import Article, ArticleBase
@@ -9,8 +10,8 @@ router = APIRouter()
 
 
 @router.get("/articles/")
-def get_home_page(
-    session: Annotated[Session, Depends(get_session)],
+async def get_home_page(
+    session: Annotated[AsyncSession, Depends(get_session)],
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100
 ) -> list[Article]:
@@ -19,38 +20,44 @@ def get_home_page(
     Returns:
         list[Article]: list of articles
     """
-    articles = session.exec(select(Article).offset(offset).limit(limit)).all()
+    articles = (
+        await session.execute(select(Article).offset(offset).limit(limit))
+        ).scalars().all()
     return articles
 
 
-@router.get("/articles/{article_id}")
-def get_article(
-    article_id: int,
-    session: Annotated[Session, Depends(get_session)]
+@router.get("/articles/{article_title}")
+async def get_article(
+    article_title: str,
+    session: Annotated[AsyncSession, Depends(get_session)]
 ) -> Article:
     """
-    This function retrieves the article title and content by its id.
+    This function retrieves the article title and content by its title.
 
     Parameters:
-        article_id (int): id of the article
+        article_title (str): title of the article
 
     Returns:
         Article: article title, content, id
     """
 
-    article = session.get(Article, article_id)
+    article = (
+        await session.execute(
+            select(Article).where(Article.title == article_title)
+            )
+        ).scalars().first()
     if not article:
         raise HTTPException(
             status_code=404,
-            detail="Article {article_id} not found"
+            detail="Article {article_title} not found"
             )
     return article
 
 
 @router.post("/articles/")
-def publish_article(
+async def publish_article(
     article: ArticleBase,
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[AsyncSession, Depends(get_session)]
 ) -> dict:
     """This function saves the article in database using unique id.
     Parameters:
@@ -67,8 +74,8 @@ def publish_article(
 
     _article_verified: Article = Article(**_article)
     session.add(_article_verified)
-    session.commit()
-    session.refresh(_article_verified)
+    await session.commit()
+    await session.refresh(_article_verified)
     return {
         "message": f"Article with id {_article_verified.id} added successfully"
         }

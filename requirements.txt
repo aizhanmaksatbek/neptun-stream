@@ -10,5 +10,7 @@ black
 flake8
 mypy
 alembic
-postgresql@18
 uv
+sqlalchemy
+psycopg
+greenlet

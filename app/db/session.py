@@ -1,10 +1,19 @@
 from ..config.settings import DB_URL
-from sqlmodel import create_engine, Session
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker
+    )
+
+engine = create_async_engine(DB_URL)
+
+SessionLocal = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 
-engine = create_engine(DB_URL)
-
-
-def get_session():
-    with Session(engine) as session:
+async def get_session():
+    async with SessionLocal() as session:
         yield session
