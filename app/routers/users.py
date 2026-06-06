@@ -31,7 +31,10 @@ def verify_password(plain_password: str, encrypted_password: str) -> bool:
         return password_hash.verify(plain_password, encrypted_password)
     except UnknownHashError:
         logging.error("Unknown hash error occurred while verifying password.")
-        raise HTTPException(status_code=400, detail="Invalid password.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid password."
+            )
 
 
 router = APIRouter()
@@ -80,7 +83,10 @@ async def delete_user(
 ):
     user = await session.get(User, username)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+            )
     await session.delete(user)
     await session.commit()
     return {"message": "User deleted"}
@@ -200,7 +206,7 @@ async def login(
     user = await authenticate(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect username or password"
             )
     expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

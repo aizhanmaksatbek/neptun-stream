@@ -1,7 +1,7 @@
 import uuid
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, Query, APIRouter, Depends
+from fastapi import HTTPException, Query, APIRouter, Depends, status
 from typing import Annotated
 from ..db.models import Article, ArticleBase
 from ..db.session import get_session
@@ -48,8 +48,8 @@ async def get_article(
         ).scalars().first()
     if not article:
         raise HTTPException(
-            status_code=404,
-            detail="Article {article_title} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Article {article_title} not found"
             )
     return article
 
