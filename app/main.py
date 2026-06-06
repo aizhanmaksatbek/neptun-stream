@@ -14,5 +14,7 @@ templates = Jinja2Templates(directory="app/templates")
 def home(request: Request):
     articles = requests.get("http://localhost:8000/articles/").json()
     return templates.TemplateResponse(
-        request, "home.html", {"articles": articles}
+        request,
+        "home.html",
+        {"articles": articles, "title": "Blog Posts Home"}
         )
